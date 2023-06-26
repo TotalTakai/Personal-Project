@@ -6,10 +6,11 @@ public class SpawnManager : MonoBehaviour
 {
 
     private readonly float xBoundary = 5.5f;
-    private readonly float spawnDistanceFromPlayer = 18;
     private readonly float zSpawnLocation = -1;
-    private float playerY = -4;
-    private float startYSpawnLocation = 0;
+    private readonly float spawnDistance = 3f;
+    private readonly float minimumSpawnDistance = 15;
+    private float currentYSpawnLocation = 0;
+    
     
 
     public GameObject platformPrefab;
@@ -24,7 +25,7 @@ public class SpawnManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (player.transform.position.y - playerY > 3.5) // Makes sure there's a 4.5 meter difference between platforms
+        if (currentYSpawnLocation - player.transform.position.y < minimumSpawnDistance) 
         {
             spawnPlatform();
         }
@@ -39,15 +40,7 @@ public class SpawnManager : MonoBehaviour
     private Vector3 GenerateSpawnLocation()
     {
         float randomX = Random.Range(-xBoundary, xBoundary);
-        if (startYSpawnLocation < 14)
-        {
-            startYSpawnLocation += 3.5f;
-            return new Vector3(randomX, startYSpawnLocation, zSpawnLocation);
-        }
-        else
-        {
-            playerY = player.transform.position.y;
-            return new Vector3(randomX, playerY + spawnDistanceFromPlayer, zSpawnLocation);
-        }
+        currentYSpawnLocation += spawnDistance;
+        return new Vector3(randomX, currentYSpawnLocation, zSpawnLocation);
     }
 }

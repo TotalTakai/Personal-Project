@@ -5,18 +5,17 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private readonly float speed = 10;
-    private readonly float fullSpeedJumpForce = 1200.0f;
+    private readonly float fullSpeedJumpForce = 1500.0f;
     private readonly float jumpForce = 700.0f;
     private readonly float xBoundary = 10.8f;
     private readonly float playerTopSpeed = 15;
     private readonly float boundaryKnockbackMultiplayer = 100;
 
+    [SerializeField] bool facingRight = true;
     private bool isGrounded = true;
     private float horizontalInput;
     private Rigidbody playerRB;
-
-    [SerializeField] Animator animator;
-    [SerializeField] float currentSpeed;
+    private Animator animator;
 
 
     // Start is called before the first frame update
@@ -29,8 +28,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        
-        currentSpeed = CheckCurrentSpeed();
+
     }
 
     // Update is called once per frame
@@ -38,7 +36,6 @@ public class PlayerController : MonoBehaviour
     {
         Move();
         Jump();
-        //AnimationUpdate();
         CheckBoundary();
     }
 
@@ -46,26 +43,27 @@ public class PlayerController : MonoBehaviour
     private void Move()
     {
         horizontalInput = Input.GetAxis("Horizontal");
+        if ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight)) ChangeDirection(); // changes animation direction according to player input
 
         // Controls running animations
         /* animator.SetFloat("Speed_f", Mathf.abs(horizontalInput)); 
          if (HorizontalInput == 0) animator.SetBool("Static_b", false)
         else animator.SetBool("Static_b", true)*/
 
-        if (playerRB.velocity.magnitude > playerTopSpeed) // Limits player grounded top speed
+        if (playerRB.velocity.x > playerTopSpeed) // Limits player grounded top speed
         {
             playerRB.velocity = playerRB.velocity.normalized * (playerTopSpeed);
         }
         else playerRB.AddForce(Vector3.right * horizontalInput * speed, ForceMode.Impulse); // Accelerates 
     }
 
+    private void ChangeDirection()
+    {
+        facingRight = !facingRight;
+        transform.Rotate(0, 180, 0);
+    }
 
     // Checks the current player speed
-    public float CheckCurrentSpeed()
-    {
-        float currentSpeedX = Mathf.RoundToInt(playerRB.velocity.magnitude);
-        return currentSpeedX;
-    }
 
     // Controls when to jump, and jump hight
     void Jump()
@@ -73,7 +71,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) & isGrounded)
         {
             animator.SetTrigger("Jump_trig");
-            if (currentSpeed < 10) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            if (Mathf.RoundToInt(playerRB.velocity.x) < 10) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             else playerRB.AddForce(Vector3.up * fullSpeedJumpForce, ForceMode.Impulse);
         }
     }
@@ -102,13 +100,13 @@ public class PlayerController : MonoBehaviour
     {
         if (transform.position.x >= xBoundary)
         {
-            //transform.position = new Vector3(xBoundary, transform.position.y, transform.position.z);
             playerRB.AddForce(Vector3.left * boundaryKnockbackMultiplayer, ForceMode.Impulse);
+            playerRB.AddForce(Vector3.up * 40, ForceMode.Impulse);
         }
-        if (transform.position.x <= -xBoundary)
+        else if (transform.position.x <= -xBoundary)
         {
-            //transform.position = new Vector3(-xBoundary, transform.position.y, transform.position.z);
             playerRB.AddForce(Vector3.right * boundaryKnockbackMultiplayer, ForceMode.Impulse);
+            playerRB.AddForce(Vector3.up * 40, ForceMode.Impulse);
         }
     }
 }

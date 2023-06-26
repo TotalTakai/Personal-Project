@@ -4,67 +4,75 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private readonly float speed = 320f;
+    private readonly float speed = 10;
     private readonly float fullSpeedJumpForce = 1200.0f;
     private readonly float jumpForce = 700.0f;
-    private readonly float xBoundary = 10;
+    private readonly float xBoundary = 10.8f;
+    private readonly float playerTopSpeed = 20;
+    private readonly float playerTopAirSpeed = 30;
     private readonly float boundaryKnockbackMultiplayer = 100;
 
     private bool isGrounded = true;
-    private bool moveRightDirection = true;
     private float horizontalInput;
-    private float oldPositionX;
     private Rigidbody playerRB;
 
-    public float currentSpeed;
-    
+    [SerializeField] Animator animator;
+    [SerializeField] float currentSpeed;
+
 
     // Start is called before the first frame update
     void Start()
     {
-        playerRB = GetComponent<Rigidbody>();
+        playerRB = transform.GetComponent<Rigidbody>();
+        animator = transform.GetChild(0).GetComponent<Animator>();
     }
 
-    // Fixed Update is called once per frame before update
+
     private void FixedUpdate()
     {
+        
         currentSpeed = CheckCurrentSpeed();
     }
 
     // Update is called once per frame
     void Update()
     {
-        CheckBoundary();
         Move();
         Jump();
+        //AnimationUpdate();
+        CheckBoundary();
     }
 
-    // Controls the movement of player
+    // Checks if the player is grounded or not, and controls it's movement speed 
     private void Move()
     {
         horizontalInput = Input.GetAxis("Horizontal");
-        playerRB.AddForce(Vector3.right * horizontalInput * speed);
-        DirectionChange();
+        if (playerRB.velocity.magnitude > playerTopSpeed && isGrounded) // Limits player grounded top speed
+        {
+            playerRB.velocity = playerRB.velocity.normalized * (playerTopSpeed);
+        }
+        else if (playerRB.velocity.magnitude > playerTopAirSpeed && !isGrounded)  // Limits the player air top speed
+        {
+            playerRB.velocity = playerRB.velocity.normalized * (playerTopAirSpeed);
+        }
+        else playerRB.AddForce(Vector3.right * horizontalInput * speed, ForceMode.Impulse); // Accelerates 
     }
 
 
     // Checks the current player speed
     public float CheckCurrentSpeed()
     {
-        float currentSpeedX = Mathf.Abs(Mathf.Abs(transform.position.x) - Mathf.Abs(oldPositionX)) * 100f;
-        oldPositionX = transform.position.x;
-
-
+        float currentSpeedX = Mathf.RoundToInt(playerRB.velocity.magnitude);
         return currentSpeedX;
     }
-    
+
     // Controls when to jump, and jump hight
     void Jump()
     {
         if (Input.GetKeyDown(KeyCode.Space) & isGrounded)
         {
-            isGrounded = false;
-            if(currentSpeed < 15) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            animator.SetTrigger("Jump_trig");
+            if (currentSpeed < 15) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             else playerRB.AddForce(Vector3.up * fullSpeedJumpForce, ForceMode.Impulse);
         }
     }
@@ -78,43 +86,52 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Resets the velocity and the rotation of player
-    private void ResetVelocityAndRotation()
+    // Checks if player left the platform and sets grounded as false
+    private void OnCollisionExit(Collision collision)
     {
-        playerRB.velocity = Vector3.zero;
-        playerRB.angularVelocity = Vector3.zero;
-    }
-
-    // Checks if the player changes direction, and if so kills the velocity and rotation
-    private void DirectionChange()
-    {
-        if (moveRightDirection && Input.GetKeyDown(KeyCode.LeftArrow))
+        if (collision.gameObject.CompareTag("Platform"))
         {
-            moveRightDirection = false;
-            if (isGrounded) ResetVelocityAndRotation();
-        }
-        else if (!moveRightDirection && Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            moveRightDirection = true;
-            if (isGrounded) ResetVelocityAndRotation();
+            isGrounded = false;
         }
     }
 
     // Checks if the player hits the boundary, and if so pushes him back to the other side
-    private void CheckBoundary() 
+    
+    private void CheckBoundary()
     {
-        if(transform.position.x >= xBoundary)
+        if (transform.position.x >= xBoundary)
         {
-            transform.position = new Vector3(xBoundary, transform.position.y, transform.position.z);
+            //transform.position = new Vector3(xBoundary, transform.position.y, transform.position.z);
             playerRB.AddForce(Vector3.left * boundaryKnockbackMultiplayer, ForceMode.Impulse);
-            moveRightDirection = false;
         }
         if (transform.position.x <= -xBoundary)
         {
-            transform.position = new Vector3(-xBoundary, transform.position.y, transform.position.z);
+            //transform.position = new Vector3(-xBoundary, transform.position.y, transform.position.z);
             playerRB.AddForce(Vector3.right * boundaryKnockbackMultiplayer, ForceMode.Impulse);
-            moveRightDirection = true;
         }
-
     }
+
+    /*
+    private void AnimationUpdate()
+    {
+        if (isGrounded)
+        {
+            if (currentSpeed == 0)
+            {
+                animator.SetFloat("Speed_f", 0);
+                animator.SetBool("Static_b", false);
+            }
+            else if (currentSpeed < 10)
+            {
+                animator.SetFloat("Speed_f", 0.3f);
+                animator.SetBool("Static_b", true);
+            }
+            else
+            {
+                animator.SetFloat("Speed_f", 0.6f);
+                animator.SetBool("Static_b", true);
+            }
+        }
+    }
+    */
 }

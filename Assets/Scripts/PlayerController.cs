@@ -8,8 +8,7 @@ public class PlayerController : MonoBehaviour
     private readonly float fullSpeedJumpForce = 1200.0f;
     private readonly float jumpForce = 700.0f;
     private readonly float xBoundary = 10.8f;
-    private readonly float playerTopSpeed = 20;
-    private readonly float playerTopAirSpeed = 30;
+    private readonly float playerTopSpeed = 15;
     private readonly float boundaryKnockbackMultiplayer = 100;
 
     private bool isGrounded = true;
@@ -47,13 +46,15 @@ public class PlayerController : MonoBehaviour
     private void Move()
     {
         horizontalInput = Input.GetAxis("Horizontal");
-        if (playerRB.velocity.magnitude > playerTopSpeed && isGrounded) // Limits player grounded top speed
+
+        // Controls running animations
+        /* animator.SetFloat("Speed_f", Mathf.abs(horizontalInput)); 
+         if (HorizontalInput == 0) animator.SetBool("Static_b", false)
+        else animator.SetBool("Static_b", true)*/
+
+        if (playerRB.velocity.magnitude > playerTopSpeed) // Limits player grounded top speed
         {
             playerRB.velocity = playerRB.velocity.normalized * (playerTopSpeed);
-        }
-        else if (playerRB.velocity.magnitude > playerTopAirSpeed && !isGrounded)  // Limits the player air top speed
-        {
-            playerRB.velocity = playerRB.velocity.normalized * (playerTopAirSpeed);
         }
         else playerRB.AddForce(Vector3.right * horizontalInput * speed, ForceMode.Impulse); // Accelerates 
     }
@@ -72,7 +73,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) & isGrounded)
         {
             animator.SetTrigger("Jump_trig");
-            if (currentSpeed < 15) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            if (currentSpeed < 10) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             else playerRB.AddForce(Vector3.up * fullSpeedJumpForce, ForceMode.Impulse);
         }
     }
@@ -110,28 +111,4 @@ public class PlayerController : MonoBehaviour
             playerRB.AddForce(Vector3.right * boundaryKnockbackMultiplayer, ForceMode.Impulse);
         }
     }
-
-    /*
-    private void AnimationUpdate()
-    {
-        if (isGrounded)
-        {
-            if (currentSpeed == 0)
-            {
-                animator.SetFloat("Speed_f", 0);
-                animator.SetBool("Static_b", false);
-            }
-            else if (currentSpeed < 10)
-            {
-                animator.SetFloat("Speed_f", 0.3f);
-                animator.SetBool("Static_b", true);
-            }
-            else
-            {
-                animator.SetFloat("Speed_f", 0.6f);
-                animator.SetBool("Static_b", true);
-            }
-        }
-    }
-    */
 }

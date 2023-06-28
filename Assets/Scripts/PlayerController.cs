@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     private readonly float playerTopAirSpeed = 25;
     private readonly float boundaryKnockbackMultiplayer = 100;
 
+    [SerializeField] ParticleSystem superJumpParticle;
     [SerializeField] bool facingRight = true;
     private bool isGrounded = true;
     private float horizontalInput;
@@ -70,17 +71,26 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(0, 180, 0);
     }
 
-    // Checks the current player speed
-
     // Controls when to jump, and jump hight
     void Jump()
     {
         if (Input.GetKeyDown(KeyCode.Space) & isGrounded)
         {
+            isGrounded = false;
             animator.SetTrigger("Jump_trig");
             if (Mathf.RoundToInt(playerRB.velocity.x) < 10) playerRB.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            else playerRB.AddForce(Vector3.up * fullSpeedJumpForce, ForceMode.Impulse);
-        }
+            else
+            {
+                playerRB.AddForce(Vector3.up * fullSpeedJumpForce, ForceMode.Impulse);
+                SuperJump();
+            }
+        } 
+    }
+
+    // Adds superjump particles
+    void SuperJump()
+    {
+        superJumpParticle.Play();
     }
 
     // Checks when the player collides with a platform and enables jumping again
@@ -90,6 +100,7 @@ public class PlayerController : MonoBehaviour
         {
             isGrounded = true;
             if (transform.position.y > HighestY) HighestY = transform.position.y;
+            superJumpParticle.Stop();
         }
     }
 

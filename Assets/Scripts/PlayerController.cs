@@ -6,9 +6,10 @@ public class PlayerController : MonoBehaviour
 {
     private readonly float speed = 10;
     private readonly float fullSpeedJumpForce = 1500.0f;
-    private readonly float jumpForce = 700.0f;
+    private readonly float jumpForce = 750.0f;
     private readonly float xBoundary = 10.8f;
     private readonly float playerTopSpeed = 15;
+    private readonly float playerTopAirSpeed = 25;
     private readonly float boundaryKnockbackMultiplayer = 100;
 
     [SerializeField] bool facingRight = true;
@@ -16,6 +17,8 @@ public class PlayerController : MonoBehaviour
     private float horizontalInput;
     private Rigidbody playerRB;
     private Animator animator;
+
+    public float HighestY =0;
 
 
     // Start is called before the first frame update
@@ -50,9 +53,13 @@ public class PlayerController : MonoBehaviour
          if (HorizontalInput == 0) animator.SetBool("Static_b", false)
         else animator.SetBool("Static_b", true)*/
 
-        if (playerRB.velocity.x > playerTopSpeed) // Limits player grounded top speed
+        if (playerRB.velocity.magnitude > playerTopSpeed && isGrounded) // Limits player grounded top speed
         {
             playerRB.velocity = playerRB.velocity.normalized * (playerTopSpeed);
+        }
+        else if (playerRB.velocity.magnitude > playerTopAirSpeed && !isGrounded)
+        {
+            playerRB.velocity = playerRB.velocity.normalized * (playerTopAirSpeed);
         }
         else playerRB.AddForce(Vector3.right * horizontalInput * speed, ForceMode.Impulse); // Accelerates 
     }
@@ -82,6 +89,7 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Platform"))
         {
             isGrounded = true;
+            if (transform.position.y > HighestY) HighestY = transform.position.y;
         }
     }
 
@@ -107,6 +115,7 @@ public class PlayerController : MonoBehaviour
         {
             playerRB.AddForce(Vector3.right * boundaryKnockbackMultiplayer, ForceMode.Impulse);
             playerRB.AddForce(Vector3.up * 40, ForceMode.Impulse);
+
         }
     }
 }
